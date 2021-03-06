@@ -1,7 +1,6 @@
 import json
 
-
-class Automate:
+class Afd:
 
     def __init__(self, alfabet):
         self.transitions = dict()
@@ -99,21 +98,20 @@ class Automate:
         """
         print("T: " + '   '.join(list(map(parseString, self.transitions.items()))))
 
+# automate = Afd("ab")
+# automate.CreateStates(['q1', 'q2'])
+# automate.setInitState('q1')
+# automate.setFinalState(['q1'])
 
-automate = Automate("abc")
-automate.CreateStates(['q1', 'q2'])
-automate.setInitState('q1')
-automate.setFinalState(['q1'])
+# automate.createTransition('q1', 'q2', 'a')
+# automate.createTransition('q2', 'q1', 'a')
+# automate.createTransition('q1', 'q1', 'b')
+# automate.createTransition('q2', 'q2', 'b')
 
-automate.createTransition('q1', 'q2', 'a')
-automate.createTransition('q2', 'q1', 'a')
-automate.createTransition('q1', 'q1', 'b')
-automate.createTransition('q2', 'q2', 'b')
+# chain = "aaaaabaabbbaa"
 
-chain = "aaaaabaabbbaa"
+# automate.saveAutomate()
+# automate.readAutomate()
+# automate.print()
 
-automate.saveAutomate()
-automate.readAutomate()
-automate.print()
-
-automate.run(chain)
+# automate.run(chain)
