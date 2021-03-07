@@ -1,11 +1,17 @@
 import json
 
-class Afd:
 
+class Afd:
     def __init__(self, alfabet):
         self.transitions = dict()
         self.final_states = set()
         self.alfabet = alfabet
+
+    def ThrowError(self, error_name):
+        try:
+            raise Exception(error_name)
+        except Exception as err:
+            print(err)
 
     def CreateStates(self, states):
         self.states = set(states)
@@ -23,36 +29,120 @@ class Afd:
             if state in self.states:
                 if state not in self.final_states:
                     self.final_states.add(state)
-
             else:
                 raise ValueError("This state doesn't exists")
 
-    def createTransition(self, origin, destiny, symbol):
+    def CheckFinalState(self, x):
+        return x in self.final_states
+
+    def createTransition(self, transition):
         if(
-                origin not in self.states or
-                symbol not in self.alfabet or
-                destiny not in self.states):
+                transition['origin'] not in self.states or
+                transition['symbol'] not in self.alfabet or
+                transition['destiny'] not in self.states):
             raise ValueError("Error")
 
-        self.transitions[origin + ";" + symbol] = destiny
+        self.transitions[transition['origin'] + ";" +
+                         transition['symbol']] = transition['destiny']
+
+    def RemoveUnusedStates(self):
+        current_state = self.init_state
+        states_used = [current_state]
+
+        for state in states_used:
+            for letter in self.alfabet:
+                try:
+                    destiny = self.transitions[state + ';' + letter]
+                except:
+                    self.ThrowError(
+                        "This automate isn't complete, can't continue")
+                    exit(0)
+
+                if destiny not in states_used:
+                    states_used.append(destiny)
+        self.states = states_used
+
+    def CreateMinimizationTable(self):
+        self.minimization_table = {}
+
+        for state_y in sorted(self.states):
+            for state_x in sorted(self.states):
+                if state_x < state_y:
+                    list_condition = list(
+                        map(self.CheckFinalState, [state_x, state_y]))
+                    if not all(list_condition) and any(list_condition):
+                        is_equivalent = True
+                    else:
+                        is_equivalent = False
+
+                    self.minimization_table[f"{state_y};{state_x}"] = is_equivalent
+
+        # for each in self.minimization_table.items():
+        #     print(each[0], each[1])
+
+    def CheckEquivalents(self):
+        for key, value in sorted(self.minimization_table.items()):
+            origin, destiny = key.split(';')[0], key.split(';')[1]
+            if value == True:
+                continue
+
+            for symbol in self.alfabet:
+                comparison_origin = self.transitions[f"{origin};{symbol}"]
+                comparison_destiny = self.transitions[f"{destiny};{symbol}"]
+
+                if comparison_origin == comparison_destiny:
+                    continue
+                try:
+                    if self.minimization_table[f'{comparison_origin};{comparison_destiny}'] == True:
+                        self.minimization_table[f"{origin};{destiny}"] = True
+                        break
+                except:
+                    if self.minimization_table[f'{comparison_destiny};{comparison_origin}'] == True:
+                        self.minimization_table[f"{destiny};{origin}"] = True
+                        break
+
+        # for each in self.minimization_table.items():
+        #     print(each[0], each[1])
+
+    def Minimize(self):
+        self.CreateMinimizationTable()
+        self.CheckEquivalents()
+
+        for block in self.minimization_table.items():
+            if block[1] == False:
+                keys = list(self.transitions.keys())
+                for key in keys:
+                    if self.transitions[key] == block[0].split(';')[1]:
+                        self.transitions[key] = block[0].split(';')[0]
+
+                    if key.split(';')[0] == block[0].split(';')[1]:
+                        self.transitions.pop(key)
+
+        self.RemoveUnusedStates()
 
     def run(self, chain):
         try:
             self.current_state = self.init_state
-
             for symbol in chain:
                 current_value = self.transitions[self.current_state + ";" + symbol]
                 self.current_state = current_value
 
-            if(self.current_state not in self.final_states):
-                raise ValueError("This chain not accepted!")
+            if(self.current_state not in self.final_states):  # Estado de não aceitação
+                self.ThrowError(
+                    f"This {self.current_state} isn't a final state")
+                return
 
             print("Chain accepted!")
-        except ValueError as err:
-            print(err)
+        except KeyError:
+            print(
+                "this automate isn't complete, the final state is a non-acceptance state")
 
-        except KeyError as err:
-            print("Transition not found " + str(err))
+        except Exception as err:
+            print("This chain is not accepted! - " + str(err))
+
+    """ 
+        Utils methods
+    """
 
     def copyAutomate(self):
         return self
@@ -98,20 +188,27 @@ class Afd:
         """
         print("T: " + '   '.join(list(map(parseString, self.transitions.items()))))
 
+
 # automate = Afd("ab")
-# automate.CreateStates(['q1', 'q2'])
-# automate.setInitState('q1')
-# automate.setFinalState(['q1'])
+# automate.CreateStates(['q0', 'q1', 'q2', 'q3', 'q4', 'q5'])
+# automate.setInitState('q0')
+# automate.setFinalState(['q0', 'q4', 'q5'])
 
-# automate.createTransition('q1', 'q2', 'a')
-# automate.createTransition('q2', 'q1', 'a')
-# automate.createTransition('q1', 'q1', 'b')
-# automate.createTransition('q2', 'q2', 'b')
-
-# chain = "aaaaabaabbbaa"
+# automate.createTransition({'origin': 'q0', 'destiny': 'q1', 'symbol': 'b'})
+# automate.createTransition({'origin': 'q0', 'destiny': 'q2', 'symbol': 'a'})
+# automate.createTransition({'origin': 'q1', 'destiny': 'q1', 'symbol': 'a'})
+# automate.createTransition({'origin': 'q1', 'destiny': 'q0', 'symbol': 'b'})
+# automate.createTransition({'origin': 'q2', 'destiny': 'q4', 'symbol': 'a'})
+# automate.createTransition({'origin': 'q2', 'destiny': 'q5', 'symbol': 'b'})
+# automate.createTransition({'origin': 'q3', 'destiny': 'q5', 'symbol': 'a'})
+# automate.createTransition({'origin': 'q3', 'destiny': 'q4', 'symbol': 'b'})
+# automate.createTransition({'origin': 'q4', 'destiny': 'q2', 'symbol': 'b'})
+# automate.createTransition({'origin': 'q4', 'destiny': 'q3', 'symbol': 'a'})
+# automate.createTransition({'origin': 'q5', 'destiny': 'q2', 'symbol': 'a'})
+# automate.createTransition({'origin': 'q5', 'destiny': 'q3', 'symbol': 'b'})
 
 # automate.saveAutomate()
 # automate.readAutomate()
+# automate.Minimize()
+# automate.run("aaaaabaabbbaaaaaaa")
 # automate.print()
-
-# automate.run(chain)
