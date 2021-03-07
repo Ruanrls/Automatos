@@ -88,7 +88,7 @@ class Anfd:
 
     def saveAutomate(self):
         automate = {
-            "type": "afd",
+            "type": "afnd",
             "alfabet": self.alfabet,
             "transitions": self.transitions,
             "states": list(self.states),

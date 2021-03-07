@@ -60,7 +60,16 @@ class Afd:
 
                 if destiny not in states_used:
                     states_used.append(destiny)
+
+        if(len(self.states) == len(states_used)):
+            print("Already minimized!")
+            return
+
         self.states = states_used
+        states = self.final_states
+        for state in list(states):
+            if state not in states_used:
+                self.final_states.remove(state)
 
     def CreateMinimizationTable(self):
         self.minimization_table = {}
@@ -77,18 +86,20 @@ class Afd:
 
                     self.minimization_table[f"{state_y};{state_x}"] = is_equivalent
 
-        # for each in self.minimization_table.items():
-        #     print(each[0], each[1])
-
     def CheckEquivalents(self):
+        self.CreateMinimizationTable()
+
         for key, value in sorted(self.minimization_table.items()):
             origin, destiny = key.split(';')[0], key.split(';')[1]
             if value == True:
                 continue
 
             for symbol in self.alfabet:
-                comparison_origin = self.transitions[f"{origin};{symbol}"]
-                comparison_destiny = self.transitions[f"{destiny};{symbol}"]
+                try:
+                    comparison_origin = self.transitions[f"{origin};{symbol}"]
+                    comparison_destiny = self.transitions[f"{destiny};{symbol}"]
+                except:
+                    continue
 
                 if comparison_origin == comparison_destiny:
                     continue
@@ -101,11 +112,29 @@ class Afd:
                         self.minimization_table[f"{destiny};{origin}"] = True
                         break
 
-        # for each in self.minimization_table.items():
-        #     print(each[0], each[1])
+    def DoubleEquivalence(self, another_automate):
+        aux_automate = self
+
+        aux_automate.states.update(another_automate.states)
+        aux_automate.final_states.update(another.final_states)
+        aux_automate.transitions.update(another_automate.transitions)
+
+        aux_automate.CheckEquivalents()
+
+        try:
+            is_equivalent = aux_automate.minimization_table[
+                f'{self.init_state};{another_automate.init_state}']
+        except:
+            is_equivalent = aux_automate.minimization_table[
+                f'{another_automate.init_state};{self.init_state}']
+
+        if is_equivalent == False:
+            print("Equivalent automates")
+            return
+        else:
+            print("Not equivalent automates")
 
     def Minimize(self):
-        self.CreateMinimizationTable()
         self.CheckEquivalents()
 
         for block in self.minimization_table.items():
@@ -188,7 +217,6 @@ class Afd:
         """
         print("T: " + '   '.join(list(map(parseString, self.transitions.items()))))
 
-
 # automate = Afd("ab")
 # automate.CreateStates(['q0', 'q1', 'q2', 'q3', 'q4', 'q5'])
 # automate.setInitState('q0')
@@ -209,6 +237,27 @@ class Afd:
 
 # automate.saveAutomate()
 # automate.readAutomate()
-# automate.Minimize()
+# # automate.Minimize()
 # automate.run("aaaaabaabbbaaaaaaa")
-# automate.print()
+# # automate.print()
+
+# print('\n')
+
+# another = Afd("ab")
+# another.CreateStates(['q6', 'q7', 'q8', 'q9'])
+# another.setInitState('q6')
+# another.setFinalState(['q6', 'q9'])
+
+# another.createTransition({'origin': 'q6', 'destiny': 'q7', 'symbol': 'b'})
+# another.createTransition({'origin': 'q6', 'destiny': 'q8', 'symbol': 'a'})
+# another.createTransition({'origin': 'q7', 'destiny': 'q7', 'symbol': 'a'})
+# another.createTransition({'origin': 'q7', 'destiny': 'q6', 'symbol': 'b'})
+# another.createTransition({'origin': 'q8', 'destiny': 'q9', 'symbol': 'a'})
+# another.createTransition({'origin': 'q8', 'destiny': 'q9', 'symbol': 'b'})
+# another.createTransition({'origin': 'q9', 'destiny': 'q8', 'symbol': 'a'})
+# another.createTransition({'origin': 'q9', 'destiny': 'q8', 'symbol': 'b'})
+# another.Minimize()
+# another.run("aaaaabaabbbaaaaaaa")
+# # another.print()
+
+# automate.DoubleEquivalence(another)
