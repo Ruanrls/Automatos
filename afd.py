@@ -1,11 +1,16 @@
 import json
+from time import sleep
 
 
 class Afd:
+    """ Initialize automate """
+
     def __init__(self, alfabet):
         self.transitions = dict()
         self.final_states = set()
         self.alfabet = alfabet
+
+    """ Throw errors on screen """
 
     def ThrowError(self, error_name):
         try:
@@ -13,14 +18,20 @@ class Afd:
         except Exception as err:
             print(err)
 
+    """ Create the states of automates (needs to be a list) """
+
     def CreateStates(self, states):
         self.states = set(states)
+
+    """ Set the init state of automate """
 
     def setInitState(self, state):
         if(state in self.states):
             self.init_state = state
         else:
             raise ValueError("This state doesn't exist")
+
+    """ Set the final states of automate """
 
     def setFinalState(self, states):
         states = set(states)
@@ -32,8 +43,12 @@ class Afd:
             else:
                 raise ValueError("This state doesn't exists")
 
+    """ Check if the state passed by parameter is a final state """
+
     def CheckFinalState(self, x):
         return x in self.final_states
+
+    """ Create one transition of automate """
 
     def createTransition(self, transition):
         if(
@@ -44,6 +59,8 @@ class Afd:
 
         self.transitions[transition['origin'] + ";" +
                          transition['symbol']] = transition['destiny']
+
+    """ Removes the unused states (all that don't have any transition coming in and coming out) """
 
     def RemoveUnusedStates(self):
         current_state = self.init_state
@@ -65,11 +82,13 @@ class Afd:
             print("Already minimized!")
             return
 
-        self.states = states_used
+        self.states = set(states_used)
         states = self.final_states
         for state in list(states):
             if state not in states_used:
                 self.final_states.remove(state)
+
+    """ Create the minimization table of this automate """
 
     def CreateMinimizationTable(self):
         self.minimization_table = {}
@@ -85,6 +104,8 @@ class Afd:
                         is_equivalent = False
 
                     self.minimization_table[f"{state_y};{state_x}"] = is_equivalent
+
+    """ Check non equivalents statuses with  True flag """
 
     def CheckEquivalents(self):
         self.CreateMinimizationTable()
@@ -112,6 +133,8 @@ class Afd:
                         self.minimization_table[f"{destiny};{origin}"] = True
                         break
 
+    """ Check if the passed automate are equivalent to this one """
+
     def DoubleEquivalence(self, another_automate):
         aux_automate = self
 
@@ -134,6 +157,8 @@ class Afd:
         else:
             print("Not equivalent automates")
 
+    """  Minimize the automate to your minimal form """
+
     def Minimize(self):
         self.CheckEquivalents()
 
@@ -148,6 +173,8 @@ class Afd:
                         self.transitions.pop(key)
 
         self.RemoveUnusedStates()
+
+    """ Runs the automate, printing if this chain is accepted or no """
 
     def run(self, chain):
         try:
@@ -169,12 +196,12 @@ class Afd:
         except Exception as err:
             print("This chain is not accepted! - " + str(err))
 
-    """ 
-        Utils methods
-    """
+    """ Return this automate to copy to another variable """
 
     def copyAutomate(self):
         return self
+
+    """ Saves the automate in a file (automate.txt). Needs to be json"""
 
     def saveAutomate(self):
         automate = {
@@ -190,6 +217,8 @@ class Afd:
         with open('automate.txt', 'w') as file:
             file.write(automate)
 
+    """ Reads the automate from a file (automate.txt) needs to be json """
+
     def readAutomate(self):
         with open('automate.txt', 'r') as file:
             automate = json.load(file)
@@ -199,6 +228,8 @@ class Afd:
         self.states = set(automate['states'])
         self.init_state = automate['init_state']
         self.final_states = set(automate['final_states'])
+
+    """ Print the current automate (transitions, states, init states, final states) """
 
     def print(self):
 
@@ -217,47 +248,89 @@ class Afd:
         """
         print("T: " + '   '.join(list(map(parseString, self.transitions.items()))))
 
-automate = Afd("ab")
-automate.CreateStates(['q0', 'q1', 'q2', 'q3', 'q4', 'q5'])
-automate.setInitState('q0')
-automate.setFinalState(['q0', 'q4', 'q5'])
+    """ Create 2 automates and make some operations to them (print the results out) """
 
-automate.createTransition({'origin': 'q0', 'destiny': 'q1', 'symbol': 'b'})
-automate.createTransition({'origin': 'q0', 'destiny': 'q2', 'symbol': 'a'})
-automate.createTransition({'origin': 'q1', 'destiny': 'q1', 'symbol': 'a'})
-automate.createTransition({'origin': 'q1', 'destiny': 'q0', 'symbol': 'b'})
-automate.createTransition({'origin': 'q2', 'destiny': 'q4', 'symbol': 'a'})
-automate.createTransition({'origin': 'q2', 'destiny': 'q5', 'symbol': 'b'})
-automate.createTransition({'origin': 'q3', 'destiny': 'q5', 'symbol': 'a'})
-automate.createTransition({'origin': 'q3', 'destiny': 'q4', 'symbol': 'b'})
-automate.createTransition({'origin': 'q4', 'destiny': 'q2', 'symbol': 'b'})
-automate.createTransition({'origin': 'q4', 'destiny': 'q3', 'symbol': 'a'})
-automate.createTransition({'origin': 'q5', 'destiny': 'q2', 'symbol': 'a'})
-automate.createTransition({'origin': 'q5', 'destiny': 'q3', 'symbol': 'b'})
+    def TestCase(self):
 
-automate.saveAutomate()
-automate.readAutomate()
-# automate.Minimize()
-automate.run("aaaaabaabbbaaaaaaa")
-# automate.print()
+        automate = Afd("ab")
+        automate.CreateStates(['q0', 'q1', 'q2', 'q3', 'q4', 'q5'])
+        automate.setInitState('q0')
+        automate.setFinalState(['q0', 'q4', 'q5'])
+        print("\nCreated automate...")
 
-print('\n')
+        automate.createTransition(
+            {'origin': 'q0', 'destiny': 'q1', 'symbol': 'b'})
+        automate.createTransition(
+            {'origin': 'q0', 'destiny': 'q2', 'symbol': 'a'})
+        automate.createTransition(
+            {'origin': 'q1', 'destiny': 'q1', 'symbol': 'a'})
+        automate.createTransition(
+            {'origin': 'q1', 'destiny': 'q0', 'symbol': 'b'})
+        automate.createTransition(
+            {'origin': 'q2', 'destiny': 'q4', 'symbol': 'a'})
+        automate.createTransition(
+            {'origin': 'q2', 'destiny': 'q5', 'symbol': 'b'})
+        automate.createTransition(
+            {'origin': 'q3', 'destiny': 'q5', 'symbol': 'a'})
+        automate.createTransition(
+            {'origin': 'q3', 'destiny': 'q4', 'symbol': 'b'})
+        automate.createTransition(
+            {'origin': 'q4', 'destiny': 'q2', 'symbol': 'b'})
+        automate.createTransition(
+            {'origin': 'q4', 'destiny': 'q3', 'symbol': 'a'})
+        automate.createTransition(
+            {'origin': 'q5', 'destiny': 'q2', 'symbol': 'a'})
+        automate.createTransition(
+            {'origin': 'q5', 'destiny': 'q3', 'symbol': 'b'})
 
-another = Afd("ab")
-another.CreateStates(['q6', 'q7', 'q8', 'q9'])
-another.setInitState('q6')
-another.setFinalState(['q6', 'q9'])
+        print("Added transitions")
 
-another.createTransition({'origin': 'q6', 'destiny': 'q7', 'symbol': 'b'})
-another.createTransition({'origin': 'q6', 'destiny': 'q8', 'symbol': 'a'})
-another.createTransition({'origin': 'q7', 'destiny': 'q7', 'symbol': 'a'})
-another.createTransition({'origin': 'q7', 'destiny': 'q6', 'symbol': 'b'})
-another.createTransition({'origin': 'q8', 'destiny': 'q9', 'symbol': 'a'})
-another.createTransition({'origin': 'q8', 'destiny': 'q9', 'symbol': 'b'})
-another.createTransition({'origin': 'q9', 'destiny': 'q8', 'symbol': 'a'})
-another.createTransition({'origin': 'q9', 'destiny': 'q8', 'symbol': 'b'})
-another.Minimize()
-another.run("aaaaabaabbbaaaaaaa")
-# another.print()
+        automate.readAutomate()
+        print("Saved in automate.txt\n")
+        sleep(2)
 
-automate.DoubleEquivalence(another)
+        automate.print()
+        print("Minimizing automate...\n")
+        automate.Minimize()
+        sleep(2)
+        automate.print()
+
+        chain = "aaaaabaabbbaaaaaaa"
+        print(f"Running with chain: {chain}")
+        automate.run(chain)
+
+        print('\n')
+        print("Creating another automate...\n")
+        another = Afd("ab")
+        another.CreateStates(['q6', 'q7', 'q8', 'q9'])
+        another.setInitState('q6')
+        another.setFinalState(['q6', 'q9'])
+
+        another.createTransition(
+            {'origin': 'q6', 'destiny': 'q7', 'symbol': 'b'})
+        another.createTransition(
+            {'origin': 'q6', 'destiny': 'q8', 'symbol': 'a'})
+        another.createTransition(
+            {'origin': 'q7', 'destiny': 'q7', 'symbol': 'a'})
+        another.createTransition(
+            {'origin': 'q7', 'destiny': 'q6', 'symbol': 'b'})
+        another.createTransition(
+            {'origin': 'q8', 'destiny': 'q9', 'symbol': 'a'})
+        another.createTransition(
+            {'origin': 'q8', 'destiny': 'q9', 'symbol': 'b'})
+        another.createTransition(
+            {'origin': 'q9', 'destiny': 'q8', 'symbol': 'a'})
+        another.createTransition(
+            {'origin': 'q9', 'destiny': 'q8', 'symbol': 'b'})
+        another.print()
+        sleep(2)
+
+        print("\nMinimizing automate\n")
+        another.Minimize()
+        another.print()
+
+        print(f"Running with: {chain}")
+        another.run(chain)
+
+        print("\nChecking equivalence of these automates")
+        automate.DoubleEquivalence(another)
