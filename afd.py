@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from time import sleep
 from minimization import Minimize
 
@@ -111,10 +112,10 @@ class Afd(Minimize):
         except Exception as err:
             print("This chain is not accepted! - " + str(err))
 
-    """ Return this automate to copy to another variable """
+    """ Return this automate to copy to another variable (recursive copy)"""
 
     def copyAutomate(self):
-        return self
+        return deepcopy(self)
 
     """ Saves the automate in a file (automate.txt). Needs to be json"""
 
@@ -129,13 +130,13 @@ class Afd(Minimize):
         }
 
         automate = json.dumps(automate)
-        with open('automate.txt', 'w') as file:
+        with open('automate.json', 'w') as file:
             file.write(automate)
 
     """ Reads the automate from a file (automate.txt) needs to be json """
 
     def readAutomate(self):
-        with open('automate.txt', 'r') as file:
+        with open('automate.json', 'r') as file:
             automate = json.load(file)
 
         self.alfabet = automate['alfabet']
@@ -200,13 +201,11 @@ class Afd(Minimize):
 
         print("Added transitions")
 
-        automate.readAutomate()
-        print("Saved in automate.txt\n")
-        sleep(2)
-
         automate.print()
         print("Minimizing automate...\n")
         automate.Minimize()
+        automate.saveAutomate()
+        print("Saved in automate.txt\n")
         sleep(2)
         automate.print()
 

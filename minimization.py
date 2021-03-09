@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 class Minimize:
     """ Create the minimization table of this automate """
 
@@ -47,7 +50,7 @@ class Minimize:
     """ Check if the passed automate are equivalent to this one """
 
     def DoubleEquivalence(self, another_automate):
-        aux_automate = self
+        aux_automate = deepcopy(self)
 
         aux_automate.states.update(another_automate.states)
         aux_automate.final_states.update(another_automate.final_states)
